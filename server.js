@@ -26,6 +26,25 @@ async function pickFolderMac() {
     }
 }
 
+// --- HELPER: Windows Native Picker (PowerShell) ---
+async function pickFolderWindows() {
+    // This uses a COM object to open the folder browser dialog natively
+    const script = `
+    $app = New-Object -ComObject Shell.Application
+    $folder = $app.BrowseForFolder(0, "Select your Project Folder", 0, 0)
+    if ($folder) { $folder.Self.Path }
+    `;
+    try {
+        // Use powershell.exe to execute the dialog
+        const stdout = execSync(script, { shell: 'powershell.exe' }).toString().trim();
+        return stdout ? [stdout] : [];
+    } catch (err) {
+        console.error("Windows Picker Error:", err);
+        return [];
+    }
+}
+
+
 // --- HELPER: Get Pandoc Path ---
 function getPandocPath() {
     if (fs.existsSync(CONFIG_PATH)) {
@@ -48,13 +67,22 @@ app.post('/save-config', (req, res) => {
 app.get('/pick-folder', async (req, res) => {
     try {
         let dir = [];
-        if (process.platform === 'darwin') {
-            // macOS path
+        const platform = process.platform;
+
+        if (platform === 'darwin') {
+            // macOS: AppleScript
             dir = await pickFolderMac();
+        } else if (platform === 'win32') {
+            // Windows: Native PowerShell Dialog
+            dir = await pickFolderWindows();
         } else {
-            // Windows/Linux path
-            const config = { type: 'directory' };
-            dir = await dialog(config);
+            // Linux: Use node-file-dialog (requires 'zenity' or 'kdialog' installed on the OS)
+            try {
+                const config = { type: 'directory' };
+                dir = await dialog(config);
+            } catch (linuxErr) {
+                return res.status(500).send("Linux requires 'zenity' or 'kdialog' for folder picking.");
+            }
         }
 
         if (dir && dir.length > 0) {
