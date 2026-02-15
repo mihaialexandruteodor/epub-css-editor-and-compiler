@@ -26,21 +26,42 @@ async function pickFolderMac() {
     }
 }
 
-// --- HELPER: Windows Native Picker (PowerShell) ---
 async function pickFolderWindows() {
-    // This uses a COM object to open the folder browser dialog natively
+    // This script triggers the modern "Select Folder" Explorer window
     const script = `
-    $app = New-Object -ComObject Shell.Application
-    $folder = $app.BrowseForFolder(0, "Select your Project Folder", 0, 0)
-    if ($folder) { $folder.Self.Path }
+    $skip = Add-Type -AssemblyName System.Windows.Forms
+    $dialog = New-Object System.Windows.Forms.OpenFileDialog
+    $dialog.Filter = "Folders|thumb.db" # Dummy filter
+    $dialog.ValidateNames = $false
+    $dialog.CheckFileExists = $false
+    $dialog.CheckPathExists = $true
+    $dialog.FileName = "Select Folder"
+    if ($dialog.ShowDialog() -eq 'OK') {
+        Split-Path -Parent $dialog.FileName
+    }
     `;
+
     try {
-        // Use powershell.exe to execute the dialog
-        const stdout = execSync(script, { shell: 'powershell.exe' }).toString().trim();
+        const stdout = execSync(script, {
+            shell: 'powershell.exe',
+            encoding: 'utf8'
+        }).trim();
         return stdout ? [stdout] : [];
     } catch (err) {
         console.error("Windows Picker Error:", err);
         return [];
+    }
+}
+
+async function pickFolderLinux() {
+    try {
+        // --file-selection with --directory is the native GTK picker
+        const stdout = execSync('zenity --file-selection --directory --title="Select Project Folder"', {
+            encoding: 'utf8'
+        }).trim();
+        return stdout ? [stdout] : [];
+    } catch (err) {
+        return []; // User closed or cancelled
     }
 }
 
@@ -70,30 +91,24 @@ app.get('/pick-folder', async (req, res) => {
         const platform = process.platform;
 
         if (platform === 'darwin') {
-            // macOS: AppleScript
             dir = await pickFolderMac();
         } else if (platform === 'win32') {
-            // Windows: Native PowerShell Dialog
             dir = await pickFolderWindows();
         } else {
-            // Linux: Use node-file-dialog (requires 'zenity' or 'kdialog' installed on the OS)
-            try {
-                const config = { type: 'directory' };
-                dir = await dialog(config);
-            } catch (linuxErr) {
-                return res.status(500).send("Linux requires 'zenity' or 'kdialog' for folder picking.");
-            }
+            dir = await pickFolderLinux();
         }
 
         if (dir && dir.length > 0) {
             currentProjectPath = dir[0].trim();
+            // ALWAYS return an object
             res.json({ path: currentProjectPath });
         } else {
-            res.status(400).send("Folder selection cancelled.");
+            // Change .send() to .json() to avoid frontend parse errors
+            res.status(400).json({ error: "Folder selection cancelled." });
         }
     } catch (err) {
         console.error("Picker Error:", err);
-        res.status(500).send("Folder selection failed.");
+        res.status(500).json({ error: "Folder selection failed." });
     }
 });
 
