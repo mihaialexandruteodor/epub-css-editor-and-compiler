@@ -1,0 +1,163 @@
+<!doctype html>
+<html>
+  <head>
+    <title>EPUB Pandoc Architect</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+      :root {
+        --bg: #1e1e1e;
+        --panel: #252526;
+        --text: #cccccc;
+      }
+      body {
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family: "Segoe UI", sans-serif;
+      }
+      header {
+        padding: 10px 20px;
+        background: #333;
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        border-bottom: 1px solid #444;
+      }
+      main {
+        display: flex;
+        flex-grow: 1;
+        overflow: hidden;
+      }
+
+      #editor-pane {
+        width: 45%;
+        display: flex;
+        flex-direction: column;
+        border-right: 1px solid #444;
+      }
+      #preview-pane {
+        width: 55%;
+        padding: 40px;
+        overflow-y: auto;
+        background: white;
+        color: black;
+      }
+
+      textarea {
+        flex-grow: 1;
+        background: var(--panel);
+        color: #85c1e9;
+        border: none;
+        padding: 15px;
+        font-family: "Fira Code", monospace;
+        font-size: 14px;
+        outline: none;
+      }
+      button {
+        background: #007acc;
+        color: white;
+        border: none;
+        padding: 8px 15px;
+        cursor: pointer;
+        border-radius: 3px;
+      }
+      input {
+        background: #333;
+        border: 1px solid #555;
+        color: white;
+        padding: 5px;
+      }
+
+      /* The container for the main class wrapper */
+      #epub-render-surface {
+        width: 100%;
+        max-width: 600px;
+        margin: auto;
+      }
+    </style>
+    <style id="live-css"></style>
+  </head>
+  <body>
+    <header>
+      <button onclick="pickProject()">📁 Open Project</button>
+      <span id="project-name">No Project Loaded</span>
+      |
+      <label
+        >Main Class:
+        <input
+          type="text"
+          id="class-input"
+          value="book-content"
+          oninput="updatePreview()"
+      /></label>
+      <button
+        onclick="compile()"
+        style="margin-left: auto; background: #28a745"
+      >
+        🚀 Compile EPUB
+      </button>
+    </header>
+
+    <main>
+      <div id="editor-pane">
+        <textarea
+          id="css-editor"
+          oninput="updatePreview()"
+          placeholder="/* Write scoped CSS here... */"
+        ></textarea>
+      </div>
+      <div id="preview-pane">
+        <div id="epub-render-surface"></div>
+      </div>
+    </main>
+
+    <script>
+      let projectLoaded = false;
+
+      async function pickProject() {
+        const res = await fetch("/pick-folder");
+        const data = await res.json();
+        if (data.path) loadProject();
+      }
+
+      async function loadProject() {
+        const res = await fetch("/load-project");
+        const data = await res.json();
+        document.getElementById("project-name").innerText = data.projectName;
+        document.getElementById("css-editor").value = data.css;
+        window.sampleMd = data.sampleMd;
+        projectLoaded = true;
+        updatePreview();
+      }
+
+      function updatePreview() {
+        const css = document.getElementById("css-editor").value;
+        const mainClass = document.getElementById("class-input").value;
+        const surface = document.getElementById("epub-render-surface");
+
+        // Apply logic: Update CSS tag and wrap preview in the main class
+        document.getElementById("live-css").innerHTML = css;
+        surface.className = mainClass;
+        if (window.sampleMd) surface.innerHTML = marked.parse(window.sampleMd);
+
+        // Auto-save CSS to disk
+        if (projectLoaded) {
+          fetch("/save-css", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ css }),
+          });
+        }
+      }
+
+      async function compile() {
+        const res = await fetch("/compile", { method: "POST" });
+        const data = await res.json();
+        alert(data.message || data.error);
+      }
+    </script>
+  </body>
+</html>

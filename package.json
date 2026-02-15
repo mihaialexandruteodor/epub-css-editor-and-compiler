@@ -1,0 +1,27 @@
+{
+  "name": "epub-editor",
+  "version": "1.0.0",
+  "description": "TO DO - instructions",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "express": "^5.2.1",
+    "node-file-dialog": "^1.0.3"
+  },
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mihaialexandruteodor/epub-css-editor-and-compiler.git"
+  },
+  "bugs": {
+    "url": "https://github.com/mihaialexandruteodor/epub-css-editor-and-compiler/issues"
+  },
+  "homepage": "https://github.com/mihaialexandruteodor/epub-css-editor-and-compiler#readme"
+}
