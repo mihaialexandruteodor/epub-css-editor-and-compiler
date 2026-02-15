@@ -1,133 +1,36 @@
 <!doctype html>
-<html>
+<html lang="en">
   <head>
+    <meta charset="UTF-8" />
     <title>EPUB Pandoc Architect</title>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <style>
-      :root {
-        --bg: #1e1e1e;
-        --panel: #252526;
-        --text: #cccccc;
-      }
-      body {
-        display: flex;
-        flex-direction: column;
-        height: 100vh;
-        margin: 0;
-        background: var(--bg);
-        color: var(--text);
-        font-family: "Segoe UI", sans-serif;
-      }
-      header {
-        padding: 10px 20px;
-        background: #333;
-        display: flex;
-        align-items: center;
-        gap: 20px;
-        border-bottom: 1px solid #444;
-      }
-      main {
-        display: flex;
-        flex-grow: 1;
-        overflow: hidden;
-      }
 
-      #editor-pane {
-        width: 45%;
-        display: flex;
-        flex-direction: column;
-        border-right: 1px solid #444;
-      }
-      #preview-pane {
-        width: 55%;
-        padding: 40px;
-        overflow-y: auto;
-        background: white;
-        color: black;
-      }
-
-      textarea {
-        flex-grow: 1;
-        background: var(--panel);
-        color: #85c1e9;
-        border: none;
-        padding: 15px;
-        font-family: "Fira Code", monospace;
-        font-size: 14px;
-        outline: none;
-      }
-      button {
-        background: #007acc;
-        color: white;
-        border: none;
-        padding: 8px 15px;
-        cursor: pointer;
-        border-radius: 3px;
-      }
-      input {
-        background: #333;
-        border: 1px solid #555;
-        color: white;
-        padding: 5px;
-      }
-
-      /* The container for the main class wrapper */
-      #epub-render-surface {
-        width: 100%;
-        max-width: 600px;
-        margin: auto;
-      }
-
-      /* Modal Styling */
-      #path-modal {
-        display: none;
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.8);
-        z-index: 1000;
-        justify-content: center;
-        align-items: center;
-      }
-      .modal-content {
-        background: #252526;
-        padding: 30px;
-        border-radius: 8px;
-        width: 500px;
-        color: white;
-        border: 1px solid #444;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
-      }
-    </style>
+    <link rel="stylesheet" href="style.css" />
     <style id="live-css"></style>
   </head>
   <body>
     <div id="path-modal">
       <div class="modal-content">
-        <h3 style="margin-top: 0; color: #ff5c5c">Pandoc Not Found</h3>
+        <h3>Pandoc Not Found</h3>
         <p>
-          The system cannot find Pandoc. Please paste the absolute path to
-          <strong>pandoc.exe</strong> below (e.g.,
-          <code>C:\Program Files\Pandoc\pandoc.exe</code>):
+          The system cannot find Pandoc. Paste the absolute path to
+          <strong>pandoc.exe</strong>:
         </p>
         <input
           type="text"
           id="manual-pandoc-path"
-          style="width: 100%; margin-bottom: 20px; box-sizing: border-box"
           placeholder="C:\Program Files\Pandoc\pandoc.exe"
         />
-        <div style="display: flex; justify-content: flex-end; gap: 10px">
+        <div class="modal-actions">
           <button
             onclick="
               document.getElementById('path-modal').style.display = 'none'
             "
-            style="background: #555"
+            class="btn-secondary"
           >
             Cancel
           </button>
-          <button onclick="savePandocPath()" style="background: #28a745">
+          <button onclick="savePandocPath()" class="btn-success">
             Save Path & Retry
           </button>
         </div>
@@ -137,9 +40,9 @@
     <header>
       <button onclick="pickProject()">📁 Open Project</button>
       <span id="project-name">No Project Loaded</span>
-      |
-      <label
-        >Main Class:
+      <div class="header-divider">|</div>
+      <label>
+        Main Class:
         <input
           type="text"
           id="class-input"
@@ -147,11 +50,7 @@
           oninput="updatePreview()"
         />
       </label>
-      <button
-        onclick="compile()"
-        id="compile-btn"
-        style="margin-left: auto; background: #28a745"
-      >
+      <button onclick="compile()" id="compile-btn" class="btn-compile">
         🚀 Compile EPUB
       </button>
     </header>
@@ -169,82 +68,6 @@
       </div>
     </main>
 
-    <script>
-      let projectLoaded = false;
-
-      async function pickProject() {
-        const res = await fetch("/pick-folder");
-        const data = await res.json();
-        if (data.path) loadProject();
-      }
-
-      async function loadProject() {
-        const res = await fetch("/load-project");
-        const data = await res.json();
-        document.getElementById("project-name").innerText = data.projectName;
-        document.getElementById("css-editor").value = data.css;
-        window.sampleMd = data.sampleMd;
-        projectLoaded = true;
-        updatePreview();
-      }
-
-      function updatePreview() {
-        const css = document.getElementById("css-editor").value;
-        const mainClass = document.getElementById("class-input").value;
-        const surface = document.getElementById("epub-render-surface");
-
-        // Apply logic: Update CSS tag and wrap preview in the main class
-        document.getElementById("live-css").innerHTML = css;
-        surface.className = mainClass;
-        if (window.sampleMd) surface.innerHTML = marked.parse(window.sampleMd);
-
-        // Auto-save CSS to disk
-        if (projectLoaded) {
-          fetch("/save-css", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ css }),
-          });
-        }
-      }
-
-      async function compile() {
-        const btn = document.getElementById("compile-btn");
-        const originalText = btn.innerText;
-        btn.innerText = "⌛ Compiling...";
-
-        try {
-          const res = await fetch("/compile", { method: "POST" });
-          const data = await res.json();
-
-          if (res.status === 404) {
-            // Pandoc not found trigger
-            document.getElementById("path-modal").style.display = "flex";
-          } else if (!res.ok) {
-            alert("Error:\n\n" + data.error);
-          } else {
-            alert(data.message);
-          }
-        } catch (e) {
-          alert("Server connection error.");
-        } finally {
-          btn.innerText = originalText;
-        }
-      }
-
-      async function savePandocPath() {
-        const path = document.getElementById("manual-pandoc-path").value.trim();
-        if (!path) return;
-
-        await fetch("/save-config", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ path }),
-        });
-
-        document.getElementById("path-modal").style.display = "none";
-        compile(); // Immediately try compiling again
-      }
-    </script>
+    <script src="app.js"></script>
   </body>
 </html>
