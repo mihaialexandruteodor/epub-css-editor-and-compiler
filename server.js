@@ -3,14 +3,33 @@ const { exec } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 const dialog = require('node-file-dialog'); // Triggers native OS picker
+const os = require('os');
+const ini = require('ini'); // Used for saving the Pandoc path
 
 const app = express();
 app.use(express.json());
 app.use(express.static('.'));
 
-const os = require('os');
-
+const CONFIG_PATH = path.join(__dirname, 'config.ini');
 let currentProjectPath = '';
+
+// --- HELPER: Get Pandoc Path ---
+function getPandocPath() {
+    if (fs.existsSync(CONFIG_PATH)) {
+        const config = ini.parse(fs.readFileSync(CONFIG_PATH, 'utf-8'));
+        if (config.settings && config.settings.pandoc_path) {
+            return config.settings.pandoc_path;
+        }
+    }
+    return 'pandoc'; // Default if no config exists
+}
+
+// --- ROUTE: Save Custom Pandoc Path ---
+app.post('/save-config', (req, res) => {
+    const config = { settings: { pandoc_path: req.body.path } };
+    fs.writeFileSync(CONFIG_PATH, ini.stringify(config));
+    res.json({ status: 'Path saved!' });
+});
 
 // 1. Trigger Native Folder Picker
 app.get('/pick-folder', async (req, res) => {
@@ -56,25 +75,24 @@ app.get('/load-project', (req, res) => {
 
 // 3. Save CSS
 app.post('/save-css', (req, res) => {
-    const cssPath = path.join(currentProjectPath, 'styles/epub-styles.css');
+    const cssPath = path.join(currentProjectPath, 'styles', 'epub-styles.css');
     fs.writeFileSync(cssPath, req.body.css);
     res.send({ status: 'Saved' });
 });
 
-// 4. Run Pandoc
+// 4. Run Pandoc (Using PowerShell for NAS Compatibility)
 app.post('/compile', (req, res) => {
     if (!currentProjectPath) return res.status(400).send("No project selected");
 
     const homeDir = os.homedir();
     const bookName = path.basename(currentProjectPath);
-    // Use path.join to ensure Windows-friendly backslashes
     const downloadPath = path.join(homeDir, 'Downloads', `${bookName}.epub`);
 
     // 1. Get all Markdown files from the Chapters folder manually
     const chaptersDir = path.join(currentProjectPath, 'Chapters');
     const chapterFiles = fs.readdirSync(chaptersDir)
         .filter(f => f.endsWith('.md'))
-        .map(f => `"${path.join(chaptersDir, f)}"`) // Wrap each full path in quotes
+        .map(f => `"${path.join(chaptersDir, f)}"`)
         .join(' ');
 
     // 2. Define absolute paths for other assets
@@ -83,20 +101,28 @@ app.post('/compile', (req, res) => {
     const cssPath = `"${path.join(currentProjectPath, 'styles', 'epub-styles.css')}"`;
     const outputPath = `"${downloadPath}"`;
 
-    // 3. Construct the command using ONLY absolute paths
-    // We don't use 'cd' or 'cwd' here because of the UNC path restriction
-    const command = `pandoc ${chapterFiles} -f markdown -t epub3 --split-level=1 --metadata-file=${metadataPath} --epub-cover-image=${coverPath} --css=${cssPath} -o ${outputPath}`;
+    const pandocExec = getPandocPath();
 
-    console.log("Executing absolute command for NAS...");
+    // 3. Construct the PowerShell command using the Call Operator (&)
+    const command = `& "${pandocExec}" ${chapterFiles} -f markdown -t epub3 --split-level=1 --metadata-file=${metadataPath} --epub-cover-image=${coverPath} --css=${cssPath} -o ${outputPath}`;
 
-    exec(command, (error, stdout, stderr) => {
+    console.log("Executing absolute command for NAS via PowerShell...");
+
+    exec(command, { shell: 'powershell.exe' }, (error, stdout, stderr) => {
         if (error) {
-            console.error(`Pandoc Error: ${stderr}`);
-            return res.status(500).json({ error: stderr });
+            console.error(`Pandoc Error: ${stderr || error.message}`);
+
+            // PowerShell specific error text for unrecognized commands
+            const errorText = (stderr || "") + (error.message || "");
+            const isNotFound = errorText.includes("is not recognized") || errorText.includes("The term");
+
+            return res.status(isNotFound ? 404 : 500).json({
+                error: stderr || error.message,
+                type: isNotFound ? 'PANDOC_NOT_FOUND' : 'COMPILE_ERROR'
+            });
         }
         res.json({ message: `Success! Compiled to: ${downloadPath}` });
     });
 });
-
 
 app.listen(3000, () => console.log('Editor: http://localhost:3000'));
