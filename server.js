@@ -103,8 +103,10 @@ app.post('/compile', (req, res) => {
 
     const pandocExec = getPandocPath();
 
+    const resourcePath = `"${currentProjectPath}"`;
+
     // 3. Construct the PowerShell command using the Call Operator (&)
-    const command = `& "${pandocExec}" ${chapterFiles} -f markdown -t epub3 --split-level=1 --metadata-file=${metadataPath} --epub-cover-image=${coverPath} --css=${cssPath} -o ${outputPath}`;
+    const command = `& "${pandocExec}" ${chapterFiles} -f markdown -t epub3 --split-level=1 --metadata-file=${metadataPath} --epub-cover-image=${coverPath} --css=${cssPath} --resource-path=${resourcePath} -o ${outputPath}`;
 
     console.log("Executing absolute command for NAS via PowerShell...");
 
