@@ -101,3 +101,33 @@ input {
   border: 1px solid #444;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
 }
+
+/* Chapter Selector Styling */
+#chapter-selector-container {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 10px 15px;
+  background: var(--panel);
+  border-top: 1px solid #444;
+}
+
+#chapter-selector-container label {
+  font-size: 14px;
+  color: #aaa;
+}
+
+#chapter-select {
+  flex-grow: 1;
+  background: #333;
+  color: white;
+  border: 1px solid #555;
+  padding: 6px;
+  border-radius: 3px;
+  outline: none;
+  cursor: pointer;
+}
+
+#chapter-select:focus {
+  border-color: #007acc;
+}

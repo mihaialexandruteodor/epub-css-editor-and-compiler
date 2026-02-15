@@ -62,6 +62,11 @@
           oninput="updatePreview()"
           placeholder="/* Write scoped CSS here... */"
         ></textarea>
+
+        <div id="chapter-selector-container">
+          <label for="chapter-select">Preview Chapter:</label>
+          <select id="chapter-select" onchange="changeChapter()"></select>
+        </div>
       </div>
       <div id="preview-pane">
         <div id="epub-render-surface"></div>

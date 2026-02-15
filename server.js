@@ -112,7 +112,7 @@ app.get('/pick-folder', async (req, res) => {
     }
 });
 
-// 2. Load Project Data (CSS + First Chapter)
+// 2. Load Project Data (CSS + Chapters)
 app.get('/load-project', (req, res) => {
     if (!currentProjectPath) return res.status(400).send("No project selected");
 
@@ -127,11 +127,15 @@ app.get('/load-project', (req, res) => {
 
         if (files.length === 0) throw new Error("No .md files found in Chapters folder");
 
-        const sampleMd = fs.readFileSync(path.join(chaptersDir, files[0]), 'utf8');
+        // NEW: Map through all valid files and attach their content
+        const chapters = files.map(file => ({
+            name: file,
+            content: fs.readFileSync(path.join(chaptersDir, file), 'utf8')
+        }));
 
         res.json({
             css,
-            sampleMd,
+            chapters, // Sending the full array of chapters now
             projectName: path.basename(currentProjectPath)
         });
     } catch (err) {
