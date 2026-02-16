@@ -1,0 +1,198 @@
+{
+  "main": {
+    "id": "b7fe5769da0b7792",
+    "type": "split",
+    "children": [
+      {
+        "id": "ce7d8945f89e337e",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "be748e5109aa3324",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Chapters/Chapter 0 - in medias res.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "Chapter 0 - in medias res"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "ed908d67867d9c47",
+    "type": "split",
+    "children": [
+      {
+        "id": "3c1b1ea04258f6ec",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "a87205f203934187",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false
+              },
+              "icon": "lucide-folder-closed",
+              "title": "Files"
+            }
+          },
+          {
+            "id": "8be91acf0ae64efe",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "Search"
+            }
+          },
+          {
+            "id": "ae4e17003c08d755",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "Bookmarks"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 200
+  },
+  "right": {
+    "id": "01f8267e5b2db48e",
+    "type": "split",
+    "children": [
+      {
+        "id": "7f1bfa238f9c7194",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "9115c9ce17b92496",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "Chapters/Chapter 0 - in medias res.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "Backlinks for Chapter 0 - in medias res"
+            }
+          },
+          {
+            "id": "8436c862e9e66c2a",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "Chapters/Chapter 0 - in medias res.md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "Outgoing links from Chapter 0 - in medias res"
+            }
+          },
+          {
+            "id": "0eca17df75ec1c8c",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "Tags"
+            }
+          },
+          {
+            "id": "626805bb3246e77d",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "All properties"
+            }
+          },
+          {
+            "id": "03bee2bd24dbcd55",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "Chapters/Chapter 0 - in medias res.md",
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "Outline of Chapter 0 - in medias res"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Open quick switcher": false,
+      "graph:Open graph view": false,
+      "canvas:Create new canvas": false,
+      "daily-notes:Open today's daily note": false,
+      "templates:Insert template": false,
+      "command-palette:Open command palette": false,
+      "bases:Create new base": false
+    }
+  },
+  "active": "be748e5109aa3324",
+  "lastOpenFiles": [
+    "Notes/Notes main.md",
+    "Chapters/Chapter 1. Pygmalion- Hostage situation in flooded Amsterdam ruins. Goes wrong, Nemira gets butchered in an explosion. wakes up fine in the hospital, but finds she was rebuilt as an Android.md",
+    "Chapters/Chapter 0 - in medias res.md",
+    "metadata/book-info.json",
+    "metadata",
+    "styles/epub-styles.css",
+    "styles/epub-vars.css",
+    "styles/MainStyle.css",
+    "styles"
+  ]
+}

@@ -1,0 +1,66 @@
+-- EPUB Pandoc Architect - Mac Installer
+-- Mirroring the Windows logic for dependencies and shortcuts
+
+set commonPaths to "export PATH=$PATH:/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin;"
+
+display dialog "Welcome to the EPUB Architect Installer. This will check dependencies and create a Desktop shortcut." buttons {"Continue", "Cancel"} default button "Continue"
+
+-- 1. Check for Node.js
+set nodeExists to false
+try
+	do shell script commonPaths & "command -v node"
+	set nodeExists to true
+on error
+	set nodeExists to false
+end try
+
+if nodeExists is false then
+	display dialog "Node.js is not installed. Opening download page..." buttons {"OK"}
+	open location "https://nodejs.org/en/download/prebuilt-installer" -- [cite: 1]
+	return
+end if
+
+-- 2. Check for Pandoc
+set pandocExists to false
+try
+	do shell script commonPaths & "command -v pandoc"
+	set pandocExists to true
+on error
+	set pandocExists to false
+end try
+
+if pandocExists is false then
+	display dialog "Pandoc is not installed. Opening download page..." buttons {"OK"}
+	open location "https://github.com/jgm/pandoc/releases/latest" -- [cite: 2]
+	return
+end if
+
+-- 3. Install NPM dependencies
+display notification "Installing dependencies... this may take a moment." with title "EPUB Architect"
+set projectPath to POSIX path of ((path to me as text) & "::")
+
+try
+	do shell script commonPaths & "cd " & quoted form of projectPath & " && npm install"
+on error
+	display dialog "Failed to run npm install. Ensure you are connected to the internet." buttons {"OK"}
+	return
+end try
+
+-- 4. Create Desktop Shortcut (Applet)
+set desktopPath to POSIX path of (path to desktop)
+set appName to "EPUB Architect.app"
+set runnerScript to projectPath & "run-app.sh"
+
+-- Create the shell script that handles the 3-second delay 
+set shellContent to "#!/bin/bash" & linefeed & commonPaths & linefeed & "cd " & quoted form of projectPath & linefeed & "npm start &" & linefeed & "sleep 3" & linefeed & "open http://localhost:3000"
+do shell script "echo " & quoted form of shellContent & " > " & quoted form of runnerScript
+do shell script "chmod +x " & quoted form of runnerScript
+
+-- Compile the runner into a double-clickable App on the Desktop [cite: 4]
+try
+	do shell script "osacompile -o " & quoted form of (desktopPath & appName) & " -e 'do shell script \"/bin/bash " & runnerScript & " > /dev/null 2>&1 &\"'"
+on error
+	display dialog "Could not create the Desktop shortcut." buttons {"OK"}
+end try
+
+display dialog "Installation Complete! Shortcut created on Desktop." buttons {"Finish"} default button "Finish"
