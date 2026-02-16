@@ -179,3 +179,31 @@ input:focus, select:focus {
   border: 1px solid var(--border);
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
 }
+
+/* --- NEW: Toolbar Buttons --- */
+.icon-btn {
+  background: transparent;
+  color: var(--text);
+  font-size: 16px;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  min-width: 36px;
+}
+
+.icon-btn:hover {
+  background: var(--panel);
+  border-color: var(--text-muted);
+  transform: translateY(-1px);
+}
+
+.btn-success {
+  background: #10b981; /* Emerald */
+  color: white;
+  border-radius: 6px;
+}
+
+.btn-success:hover {
+  background: #059669;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}

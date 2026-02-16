@@ -1,6 +1,11 @@
 let projectLoaded = false;
 let projectChapters = [];
 
+let cssHistory = [];
+let historyIndex = -1;
+let isHistoryNavigation = false;
+let historyTimeout;
+
 // --- NEW: CSS Parser State ---
 let parsedCSS = {};
 
@@ -29,8 +34,13 @@ async function loadProject() {
     });
 
     window.sampleMd = projectChapters.length > 0 ? projectChapters[0].content : '';
-
     projectLoaded = true;
+
+
+    // --- NEW: Reset history and push initial loaded state ---
+    cssHistory = [];
+    historyIndex = -1;
+    pushHistory(data.css);
 
     // NEW: Synchronize the Visual Editor on load
     loadVisualEditorState();
@@ -132,6 +142,9 @@ function applyVisualEditorState() {
     // Compile object back to string, update raw box, and refresh preview
     serializeCSS();
     updatePreview();
+
+    // --- NEW: Push visual edit to history ---
+    pushHistory(document.getElementById("css-editor").value);
 }
 
 function changeChapter() {
@@ -159,14 +172,6 @@ function updatePreview() {
         md = md.replace(/!\[\[(.*?)\]\]/g, '![obsidian-image](/project-assets/images/$1)');
         md = md.replace(/!\[(.*?)\]\(((?!http|data:).*?)\)/g, '![$1](/project-assets/$2)');
         surface.innerHTML = marked.parse(md);
-    }
-
-    if (projectLoaded) {
-        fetch("/save-css", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ css }),
-        });
     }
 }
 
@@ -276,6 +281,84 @@ async function checkPandocOnLoad() {
         }
     } catch (e) {
         console.error("Could not reach server to check Pandoc status.");
+    }
+}
+
+// --- NEW: History Stack & Save Logic ---
+
+function pushHistory(css) {
+    if (isHistoryNavigation) return; // Don't record undos as new events
+    if (historyIndex >= 0 && cssHistory[historyIndex] === css) return; // Prevent duplicates
+
+    // If we undo'd and then typed something new, erase the "future" history
+    cssHistory = cssHistory.slice(0, historyIndex + 1);
+    cssHistory.push(css);
+    historyIndex++;
+}
+
+function undoCSS() {
+    if (historyIndex > 0) {
+        historyIndex--;
+        applyHistoryState();
+    }
+}
+
+function redoCSS() {
+    if (historyIndex < cssHistory.length - 1) {
+        historyIndex++;
+        applyHistoryState();
+    }
+}
+
+function applyHistoryState() {
+    isHistoryNavigation = true; // Lock history pushing temporarily
+    const css = cssHistory[historyIndex];
+    document.getElementById("css-editor").value = css;
+
+    // Resync everything with the undone/redone CSS
+    parseRawCSS();
+    loadVisualEditorState();
+    updatePreview();
+
+    isHistoryNavigation = false;
+}
+
+function handleRawCSSTyping() {
+    const css = document.getElementById("css-editor").value;
+
+    // Debounce the typing so we don't save a history state for every single letter
+    clearTimeout(historyTimeout);
+    historyTimeout = setTimeout(() => {
+        pushHistory(css);
+    }, 500);
+
+    updatePreview();
+    loadVisualEditorState();
+}
+
+async function saveCSS() {
+    if (!projectLoaded) return;
+
+    const css = document.getElementById("css-editor").value;
+    const btn = document.getElementById("save-css-btn");
+    const originalText = btn.innerText;
+
+    btn.innerText = "⌛ Saving...";
+
+    try {
+        await fetch("/save-css", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ css }),
+        });
+
+        // Show success briefly
+        btn.innerText = "✅ Saved!";
+        setTimeout(() => { btn.innerText = originalText; }, 2000);
+    } catch (e) {
+        console.error("Save Error:", e);
+        alert("Failed to save CSS to disk.");
+        btn.innerText = originalText;
     }
 }
 

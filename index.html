@@ -60,16 +60,13 @@
     <main>
       <div id="editor-pane">
         <div class="editor-tabs">
-          <button
-            id="tab-btn-visual"
-            class="tab-btn active"
-            onclick="switchTab('visual')"
-          >
-            🎨 Visual Builder
-          </button>
-          <button id="tab-btn-raw" class="tab-btn" onclick="switchTab('raw')">
-            💻 Raw CSS
-          </button>
+          <button id="tab-btn-visual" class="tab-btn active" onclick="switchTab('visual')">🎨 Visual Builder</button>
+          <button id="tab-btn-raw" class="tab-btn" onclick="switchTab('raw')">💻 Raw CSS</button>
+          
+          <div style="flex-grow: 1;"></div>
+          <button onclick="undoCSS()" class="icon-btn" title="Undo">↩️</button>
+          <button onclick="redoCSS()" class="icon-btn" title="Redo">↪️</button>
+          <button onclick="saveCSS()" id="save-css-btn" class="btn-success" style="margin-left: 8px; padding: 6px 12px; font-size: 13px;">💾 Save CSS</button>
         </div>
 
         <div id="visual-tab" class="tab-content active">
@@ -169,10 +166,7 @@
         <div id="raw-tab" class="tab-content" style="display: none">
           <textarea
             id="css-editor"
-            oninput="
-              updatePreview();
-              loadVisualEditorState();
-            "
+            oninput="handleRawCSSTyping()" 
             placeholder="/* Write scoped CSS here... */"
           ></textarea>
         </div>
