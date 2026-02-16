@@ -57,17 +57,130 @@
 
     <main>
       <div id="editor-pane">
-        <textarea
-          id="css-editor"
-          oninput="updatePreview()"
-          placeholder="/* Write scoped CSS here... */"
-        ></textarea>
+        <div class="editor-tabs">
+          <button
+            id="tab-btn-visual"
+            class="tab-btn active"
+            onclick="switchTab('visual')"
+          >
+            🎨 Visual Builder
+          </button>
+          <button id="tab-btn-raw" class="tab-btn" onclick="switchTab('raw')">
+            💻 Raw CSS
+          </button>
+        </div>
+
+        <div id="visual-tab" class="tab-content active">
+          <div class="visual-controls">
+            <label class="full-width">
+              <strong>Target Markdown Element:</strong>
+              <select id="ve-selector" onchange="loadVisualEditorState()">
+                <option value=".book-content">Main Document (Body)</option>
+                <option value=".book-content h1">Heading 1</option>
+                <option value=".book-content h2">Heading 2</option>
+                <option value=".book-content h3">Heading 3</option>
+                <option value=".book-content p">Paragraph</option>
+                <option value=".book-content strong">Bold Text</option>
+                <option value=".book-content em">Italic Text</option>
+                <option value=".book-content ul">Bullet List</option>
+                <option value=".book-content blockquote">Blockquote</option>
+                <option value=".book-content pre code">Code Block</option>
+              </select>
+            </label>
+
+            <label>
+              Font Family:
+              <select id="ve-font-family" onchange="applyVisualEditorState()">
+                <option value="">(Default Theme Font)</option>
+                <option value="Arial, sans-serif">Arial</option>
+                <option value="'Times New Roman', serif">
+                  Times New Roman
+                </option>
+                <option value="Georgia, serif">Georgia</option>
+                <option value="'Courier New', monospace">Courier New</option>
+              </select>
+            </label>
+
+            <label>
+              Font Size:
+              <input
+                type="text"
+                id="ve-font-size"
+                placeholder="e.g. 1.2em or 16px"
+                oninput="applyVisualEditorState()"
+              />
+            </label>
+
+            <label>
+              Text Color:
+              <div class="color-row">
+                <input
+                  type="color"
+                  id="ve-color-picker"
+                  oninput="
+                    document.getElementById('ve-color').value = this.value;
+                    applyVisualEditorState();
+                  "
+                />
+                <input
+                  type="text"
+                  id="ve-color"
+                  placeholder="#000000"
+                  oninput="applyVisualEditorState()"
+                />
+              </div>
+            </label>
+
+            <label>
+              Background Color:
+              <div class="color-row">
+                <input
+                  type="color"
+                  id="ve-bg-picker"
+                  oninput="
+                    document.getElementById('ve-bg').value = this.value;
+                    applyVisualEditorState();
+                  "
+                />
+                <input
+                  type="text"
+                  id="ve-bg"
+                  placeholder="transparent"
+                  oninput="applyVisualEditorState()"
+                />
+              </div>
+            </label>
+
+            <label>
+              Text Align:
+              <select id="ve-text-align" onchange="applyVisualEditorState()">
+                <option value="">(Default)</option>
+                <option value="left">Left</option>
+                <option value="center">Center</option>
+                <option value="right">Right</option>
+                <option value="justify">Justify</option>
+              </select>
+            </label>
+          </div>
+        </div>
+
+        <div id="raw-tab" class="tab-content" style="display: none">
+          <textarea
+            id="css-editor"
+            oninput="
+              updatePreview();
+              loadVisualEditorState();
+            "
+            placeholder="/* Write scoped CSS here... */"
+          ></textarea>
+        </div>
 
         <div id="chapter-selector-container">
           <label for="chapter-select">Preview Chapter:</label>
           <select id="chapter-select" onchange="changeChapter()"></select>
         </div>
       </div>
+
       <div id="preview-pane">
         <div id="epub-render-surface"></div>
       </div>

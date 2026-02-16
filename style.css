@@ -138,3 +138,83 @@ input {
   display: block;
   margin: 10px auto;
 }
+
+/* --- NEW: Visual Editor & Tabs Styling --- */
+.editor-tabs {
+  display: flex;
+  background: #1e1e1e;
+  border-bottom: 1px solid #444;
+}
+
+.tab-btn {
+  flex-grow: 1;
+  background: #252526;
+  color: #aaa;
+  border: none;
+  padding: 12px;
+  cursor: pointer;
+  border-right: 1px solid #444;
+  font-weight: bold;
+}
+
+.tab-btn.active {
+  background: #333;
+  color: #fff;
+  border-bottom: 2px solid #007acc;
+}
+
+.tab-content {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  overflow-y: auto;
+}
+
+.visual-controls {
+  padding: 20px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  background: var(--panel);
+}
+
+.visual-controls label {
+  display: flex;
+  flex-direction: column;
+  font-size: 13px;
+  color: #bbb;
+  gap: 5px;
+}
+
+.visual-controls .full-width {
+  grid-column: span 2;
+  margin-bottom: 10px;
+}
+
+.visual-controls select,
+.visual-controls input[type="text"] {
+  background: #333;
+  border: 1px solid #555;
+  color: white;
+  padding: 8px;
+  border-radius: 4px;
+  font-family: inherit;
+}
+
+.color-row {
+  display: flex;
+  gap: 10px;
+}
+
+.color-row input[type="color"] {
+  height: 35px;
+  width: 50px;
+  padding: 0;
+  border: 1px solid #555;
+  background: #333;
+  cursor: pointer;
+}
+
+.color-row input[type="text"] {
+  flex-grow: 1;
+}
