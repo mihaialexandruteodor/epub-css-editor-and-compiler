@@ -31,26 +31,53 @@ async function pickFolderMac() {
 }
 
 async function pickFolderWindows() {
-    // This script triggers the modern "Select Folder" Explorer window
+    // We use -NoProfile to ignore the broken PowerShell profile error
+    // We use [void] and Out-Null to ensure NO booleans (True/False) leak out
     const script = `
-    $skip = Add-Type -AssemblyName System.Windows.Forms
+    Add-Type -AssemblyName System.Windows.Forms | Out-Null
+    $sig = '[DllImport("user32.dll")] public static extern bool SetForegroundWindow(IntPtr hWnd);'
+    Add-Type -MemberDefinition $sig -Name "Win32" -Namespace "Util" | Out-Null
+
+    $f = New-Object System.Windows.Forms.Form
+    $f.Text = "Select Project Folder"
+    $f.TopMost = $true
+    $f.Opacity = 0.01 
+    $f.ShowInTaskbar = $true
+    $f.StartPosition = "CenterScreen"
+
+    $f.Show() | Out-Null
+    [Util.Win32]::SetForegroundWindow($f.Handle) | Out-Null
+    $f.Activate() | Out-Null
+
     $dialog = New-Object System.Windows.Forms.OpenFileDialog
-    $dialog.Filter = "Folders|thumb.db" # Dummy filter
+    $dialog.Filter = "Folders|thumb.db"
     $dialog.ValidateNames = $false
     $dialog.CheckFileExists = $false
     $dialog.CheckPathExists = $true
     $dialog.FileName = "Select Folder"
-    if ($dialog.ShowDialog() -eq 'OK') {
-        Split-Path -Parent $dialog.FileName
+    
+    $result = $dialog.ShowDialog($f)
+    $f.Close() | Out-Null
+
+    if ($result -eq 'OK') {
+        Write-Output (Split-Path -Parent $dialog.FileName)
     }
     `;
 
     try {
-        const stdout = execSync(script, {
-            shell: 'powershell.exe',
+        // We call powershell.exe and pass the script via the 'input' buffer
+        // This avoids command-line length limits and argument parsing issues
+        const stdout = execSync('powershell.exe -NoProfile -ExecutionPolicy Bypass -Command -', {
+            input: script,
             encoding: 'utf8'
-        }).trim();
-        return stdout ? [stdout] : [];
+        });
+
+        const lines = stdout.split(/[\r\n]+/);
+        // Look for a line that starts with a drive letter or network path
+        const pathLine = lines.find(l => l.trim().match(/^[a-zA-Z]:\\|^\\\\/));
+
+        const cleanPath = pathLine ? pathLine.trim() : null;
+        return cleanPath ? [cleanPath] : [];
     } catch (err) {
         console.error("Windows Picker Error:", err);
         return [];
