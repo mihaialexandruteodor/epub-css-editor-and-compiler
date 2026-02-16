@@ -1,8 +1,12 @@
 const express = require('express');
 const { exec } = require('child_process');
 const fs = require('fs');
-const path = require('path');
-const dialog = require('node-file-dialog'); // Triggers native OS picker
+const path = require("path");
+
+// Force correct working directory when launched from shortcut
+process.chdir(__dirname);
+
+
 const os = require('os');
 const ini = require('ini'); // Used for saving the Pandoc path
 
