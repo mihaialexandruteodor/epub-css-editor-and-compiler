@@ -171,12 +171,22 @@ function updatePreview() {
 }
 
 async function compile() {
-    // (Unchanged compile logic...)
     const btn = document.getElementById("compile-btn");
     const originalText = btn.innerText;
     btn.innerText = "⌛ Compiling...";
 
     try {
+        // 1. Get the latest CSS from the editor
+        const currentCSS = document.getElementById("css-editor").value;
+
+        // 2. Force the server to write the file to disk and wait for it to finish
+        await fetch("/save-css", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ css: currentCSS }),
+        });
+
+        // 3. Now it is safe to run Pandoc
         const res = await fetch("/compile", { method: "POST" });
         const data = await res.json();
 
@@ -188,6 +198,7 @@ async function compile() {
             alert(data.message);
         }
     } catch (e) {
+        console.error(e); // Helpful for debugging
         alert("Server connection error.");
     } finally {
         btn.innerText = originalText;
