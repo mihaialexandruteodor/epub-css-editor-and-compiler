@@ -161,9 +161,14 @@ input:focus, select:focus {
   font-size: 18px;
 }
 
+/* Ensure images fit the preview container without overflow */
 #epub-render-surface img {
-  border-radius: 8px;
-  box-shadow: var(--shadow);
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 20px auto; /* Centers the image and adds vertical breathing room */
+  border-radius: 8px; /* Optional: matches the modern aesthetic */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Optional: adds subtle depth */
 }
 
 /* Modal Modernization */
