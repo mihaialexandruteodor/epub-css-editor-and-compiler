@@ -145,12 +145,46 @@ input:focus, select:focus {
   border-bottom: 2px solid var(--accent);
 }
 
+/* --- Visual Builder Single-Column Layout --- */
 .visual-controls {
+  display: flex;
+  flex-direction: column; /* Forces everything into a vertical stack */
+  gap: 20px; /* Adds consistent breathing room between each control */
   padding: 24px;
   background: var(--panel);
   border-radius: var(--radius);
   margin: 16px;
   border: 1px solid var(--border);
+}
+
+.visual-controls label {
+  display: flex;
+  flex-direction: column; /* Stacks the label text above the input field */
+  font-weight: 500;
+  font-size: 14px;
+  gap: 8px; /* Space between the label text and the dropdown/input */
+  color: var(--text-muted);
+}
+
+/* Specific styling to keep the color swatch and hex code side-by-side */
+.color-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.color-row input[type="text"] {
+  flex-grow: 1; /* Makes the hex input stretch to fill the column */
+}
+
+.color-row input[type="color"] {
+  height: 38px;
+  width: 50px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  cursor: pointer;
+  background: transparent;
 }
 
 /* Customizing the Rendered eBook Content */
