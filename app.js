@@ -259,3 +259,25 @@ async function exitApp() {
         }
     }
 }
+
+async function checkPandocOnLoad() {
+    try {
+        const res = await fetch('/check-pandoc');
+        const data = await res.json();
+
+        const modal = document.getElementById('path-modal');
+        if (data.found) {
+            // If the server found Pandoc, hide the dialog immediately
+            modal.style.display = 'none';
+            console.log("Pandoc verified at startup:", data.path);
+        } else {
+            // If not found, ensure the dialog is visible
+            modal.style.display = 'flex';
+        }
+    } catch (e) {
+        console.error("Could not reach server to check Pandoc status.");
+    }
+}
+
+// Execute the check as soon as the page loads
+checkPandocOnLoad();

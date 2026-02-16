@@ -96,23 +96,53 @@ async function pickFolderLinux() {
     }
 }
 
-
 // --- HELPER: Get Pandoc Path ---
 function getPandocPath() {
+    const isWin = process.platform === 'win32';
+
+    if (isWin) {
+        // 1. Check Local AppData (Standard user install)
+        const localAppData = process.env.LOCALAPPDATA;
+        const localPath = path.join(localAppData, 'Pandoc', 'pandoc.exe');
+        if (fs.existsSync(localPath)) return localPath;
+
+        // 2. Check Program Files (System-wide install)
+        const programFiles = process.env.ProgramFiles;
+        const systemPath = path.join(programFiles, 'Pandoc', 'pandoc.exe');
+        if (fs.existsSync(systemPath)) return systemPath;
+    }
+
+    // 3. Fallback to config.ini
     if (fs.existsSync(CONFIG_PATH)) {
         const config = ini.parse(fs.readFileSync(CONFIG_PATH, 'utf-8'));
         if (config.settings && config.settings.pandoc_path) {
-            return config.settings.pandoc_path;
+            let p = config.settings.pandoc_path;
+            // Expand %vars% if they exist in the INI string
+            if (isWin) {
+                p = p.replace(/%([^%]+)%/g, (_, n) => process.env[n] || _);
+            }
+            return p;
         }
     }
-    return 'pandoc'; // Default if no config exists
+
+    // 4. Final attempt: check if it's in the system PATH
+    return 'pandoc';
 }
 
 // --- ROUTE: Save Custom Pandoc Path ---
 app.post('/save-config', (req, res) => {
-    const config = { settings: { pandoc_path: req.body.path } };
-    fs.writeFileSync(CONFIG_PATH, ini.stringify(config));
-    res.json({ status: 'Path saved!' });
+    try {
+        if (!req.body.path) return res.status(400).json({ error: "No path provided" });
+
+        const cleanPath = req.body.path.replace(/^"|"$/g, '').trim();
+        const config = { settings: { pandoc_path: cleanPath } };
+
+        fs.writeFileSync(CONFIG_PATH, ini.stringify(config));
+        res.json({ status: 'Path saved!' });
+    } catch (err) {
+        console.error("Save Error:", err);
+        res.status(500).json({ error: "Failed to write config file" });
+    }
 });
 
 // 1. Trigger Native Folder Picker
@@ -267,6 +297,16 @@ app.post('/exit', (req, res) => {
     setTimeout(() => {
         process.exit(0);
     }, 500);
+});
+
+app.get('/check-pandoc', (req, res) => {
+    const pandocPath = getPandocPath();
+    const isWin = process.platform === 'win32';
+
+    // Check if the file exists or is accessible via system PATH
+    const exists = pandocPath === 'pandoc' || fs.existsSync(pandocPath);
+
+    res.json({ found: exists, path: pandocPath });
 });
 
 app.listen(3000, () => console.log('Editor: http://localhost:3000'));
