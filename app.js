@@ -240,3 +240,22 @@ async function savePandocPath() {
     document.getElementById('path-modal').style.display = 'none';
     compile();
 }
+
+async function exitApp() {
+    if (confirm("This will stop the server and close the editor. Continue?")) {
+        try {
+            // Tell the server to shut down
+            fetch("/exit", { method: "POST" });
+
+            // Try to close the window
+            window.close();
+
+            // Fallback for browsers that block window.close()
+            setTimeout(() => {
+                document.body.innerHTML = "<div style='color:white;text-align:center;margin-top:20%;font-family:sans-serif;'><h1>Server Closed</h1><p>You can now close this tab.</p></div>";
+            }, 100);
+        } catch (e) {
+            console.error("Exit failed", e);
+        }
+    }
+}

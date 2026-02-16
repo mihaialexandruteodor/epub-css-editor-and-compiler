@@ -227,5 +227,15 @@ app.use('/project-assets', (req, res) => {
     }
 });
 
+// Add this near your other routes
+app.post('/exit', (req, res) => {
+    console.log("Shutting down server...");
+    res.json({ success: true });
+
+    // Delay exit by 500ms to allow the response to reach the browser
+    setTimeout(() => {
+        process.exit(0);
+    }, 500);
+});
 
 app.listen(3000, () => console.log('Editor: http://localhost:3000'));
