@@ -131,3 +131,10 @@ input {
 #chapter-select:focus {
   border-color: #007acc;
 }
+
+#epub-render-surface img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 10px auto;
+}

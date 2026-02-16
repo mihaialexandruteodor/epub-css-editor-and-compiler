@@ -49,12 +49,25 @@ function updatePreview() {
     const mainClass = document.getElementById("class-input").value;
     const surface = document.getElementById("epub-render-surface");
 
-    // Update the live style tag and wrap the preview in the chosen class
+    // Update the live style tag
     const styleTag = document.getElementById("live-css");
     if (styleTag) styleTag.innerHTML = css;
 
     surface.className = mainClass;
-    if (window.sampleMd) surface.innerHTML = marked.parse(window.sampleMd);
+
+    if (window.sampleMd) {
+        let md = window.sampleMd;
+
+        // 1. Convert Obsidian wikilink images ![[image.png]] to standard markdown
+        // Assuming your attachments are in an 'images' folder based on your compile logic
+        md = md.replace(/!\[\[(.*?)\]\]/g, '![obsidian-image](/project-assets/images/$1)');
+
+        // 2. Catch standard markdown images ![alt](path) and point them to our server route
+        // The negative lookahead (?!http|data:) ensures we don't accidentally break web URLs or base64 data
+        md = md.replace(/!\[(.*?)\]\(((?!http|data:).*?)\)/g, '![$1](/project-assets/$2)');
+
+        surface.innerHTML = marked.parse(md);
+    }
 
     // Auto-save CSS to your NAS/Local folder
     if (projectLoaded) {

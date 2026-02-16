@@ -201,4 +201,31 @@ app.post('/compile', (req, res) => {
         res.json({ message: `Success! Compiled to: ${downloadPath}` });
     });
 });
+
+
+// 5. Serve Project Assets (Images) dynamically
+app.use('/project-assets', (req, res) => {
+    if (!currentProjectPath) return res.status(400).send("No project selected");
+
+    // req.path automatically contains everything AFTER '/project-assets'
+    // e.g., if the URL is '/project-assets/images/cover.png', req.path is '/images/cover.png'
+    // We decode it to handle spaces in folder/file names, and strip the leading slash
+    const requestedPath = decodeURIComponent(req.path).replace(/^\//, '');
+
+    if (!requestedPath) return res.status(400).send("Invalid path");
+
+    // Resolve relative to the Chapters folder or project root
+    const resolvedFromChapters = path.resolve(currentProjectPath, 'Chapters', requestedPath);
+    const resolvedFromRoot = path.resolve(currentProjectPath, requestedPath);
+
+    if (fs.existsSync(resolvedFromChapters)) {
+        res.sendFile(resolvedFromChapters);
+    } else if (fs.existsSync(resolvedFromRoot)) {
+        res.sendFile(resolvedFromRoot);
+    } else {
+        res.status(404).send("Asset not found");
+    }
+});
+
+
 app.listen(3000, () => console.log('Editor: http://localhost:3000'));
