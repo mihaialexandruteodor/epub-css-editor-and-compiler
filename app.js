@@ -175,18 +175,32 @@ async function compile() {
     const originalText = btn.innerText;
     btn.innerText = "⌛ Compiling...";
 
-    try {
-        // 1. Get the latest CSS from the editor
-        const currentCSS = document.getElementById("css-editor").value;
+    // 1. Capture the original namespaced CSS
+    const originalCSS = document.getElementById("css-editor").value;
 
-        // 2. Force the server to write the file to disk and wait for it to finish
+    try {
+        const mainClass = document.getElementById("class-input").value.trim() || "book-content";
+        let pandocCSS = originalCSS;
+
+        // 2. Strip the namespace so Pandoc can apply styles to standard HTML tags
+        if (mainClass) {
+            // Converts ".book-content em {" to "em {"
+            const childrenRegex = new RegExp(`\\.${mainClass}\\s+`, 'g');
+            // Converts ".book-content {" to "body {"
+            const rootRegex = new RegExp(`\\.${mainClass}\\s*\\{`, 'g');
+
+            pandocCSS = pandocCSS.replace(childrenRegex, '');
+            pandocCSS = pandocCSS.replace(rootRegex, 'body {');
+        }
+
+        // 3. Temporarily save the CLEANED CSS to disk for Pandoc to use
         await fetch("/save-css", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ css: currentCSS }),
+            body: JSON.stringify({ css: pandocCSS }),
         });
 
-        // 3. Now it is safe to run Pandoc
+        // 4. Run Pandoc
         const res = await fetch("/compile", { method: "POST" });
         const data = await res.json();
 
@@ -201,12 +215,18 @@ async function compile() {
         console.error(e); // Helpful for debugging
         alert("Server connection error.");
     } finally {
+        // 5. ALWAYS restore the original namespaced CSS on the server
+        // so your live editor stays in sync and doesn't break
+        await fetch("/save-css", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ css: originalCSS }),
+        });
         btn.innerText = originalText;
     }
 }
 
 async function savePandocPath() {
-    // (Unchanged pandoc save logic...)
     const pathInput = document.getElementById('manual-pandoc-path');
     const path = pathInput.value.trim();
     if (!path) return;
