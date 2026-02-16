@@ -13,8 +13,7 @@
   "type": "commonjs",
   "dependencies": {
     "express": "^5.2.1",
-    "ini": "^6.0.0",
-    "node-file-dialog": "^1.0.3"
+    "ini": "^6.0.0"
   },
   "repository": {
     "type": "git",
