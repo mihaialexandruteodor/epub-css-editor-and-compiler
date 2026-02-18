@@ -1,1 +1,4 @@
 memory-bank/
+config.ini
+run-app.bat
+node_modules/
