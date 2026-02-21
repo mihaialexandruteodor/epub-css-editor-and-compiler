@@ -9,6 +9,10 @@ let historyTimeout;
 // --- NEW: CSS Parser State ---
 let parsedCSS = {};
 
+// --- NEW: Chapter-specific settings ---
+// Stores centering options per chapter index: { 0: { headings: true, paragraphs: false, ... }, ... }
+let chapterCenteringSettings = {};
+
 async function pickProject() {
     const res = await fetch("/pick-folder");
     const data = await res.json();
@@ -35,7 +39,6 @@ async function loadProject() {
 
     window.sampleMd = projectChapters.length > 0 ? projectChapters[0].content : '';
     projectLoaded = true;
-
 
     // --- NEW: Reset history and push initial loaded state ---
     cssHistory = [];
@@ -98,13 +101,22 @@ function serializeCSS() {
     document.getElementById("css-editor").value = css;
 }
 
-function loadVisualEditorState() {
-    // 1. Parse whatever is currently in the Raw CSS box
-    parseRawCSS();
+function getChapterSpecificSelector(selector, chapterIndex) {
+    const mainClass = document.getElementById('class-input').value.trim() || 'book-content';
+    const mainClassWithDot = '.' + mainClass;
+    // Transform .book-content p -> .book-content.chapter-0 p
+    return selector.replace(mainClassWithDot, `${mainClassWithDot}.chapter-${chapterIndex}`);
+}
 
-    // 2. See what element the user is trying to style visually
-    const selector = document.getElementById('ve-selector').value;
-    const rules = parsedCSS[selector] || {};
+function loadVisualEditorState() {
+    const scope = document.querySelector('input[name="ve-scope"]:checked').value;
+    const chapterIndex = document.getElementById('chapter-select').value;
+    const baseSelector = document.getElementById('ve-selector').value;
+    const selector = scope === 'global' ? baseSelector : getChapterSpecificSelector(baseSelector, chapterIndex);
+
+    // Always parse the raw CSS to get latest
+    parseRawCSS();
+    let rules = parsedCSS[selector] || {};
 
     // 3. Populate visual fields
     document.getElementById('ve-font-family').value = rules['font-family'] || '';
@@ -120,10 +132,29 @@ function loadVisualEditorState() {
     const bg = rules['background-color'] || '';
     document.getElementById('ve-bg').value = bg;
     document.getElementById('ve-bg-picker').value = /^#[0-9A-Fa-f]{6}$/.test(bg) ? bg : '#000000';
+
+    // 4. Disable text-align for inline elements based on baseSelector
+    const textAlignSelect = document.getElementById('ve-text-align');
+    const inlineSelectors = ['.book-content strong', '.book-content em', '.book-content pre code'];
+    if (inlineSelectors.includes(baseSelector)) {
+        textAlignSelect.disabled = true;
+        textAlignSelect.title = "Text-align not applicable for inline elements";
+    } else {
+        textAlignSelect.disabled = false;
+        textAlignSelect.title = "";
+    }
 }
 
 function applyVisualEditorState() {
-    const selector = document.getElementById('ve-selector').value;
+    // Parse current CSS editor content to get latest state
+    parseRawCSS();
+
+    const baseSelector = document.getElementById('ve-selector').value;
+    const scope = document.querySelector('input[name="ve-scope"]:checked').value;
+    const chapterIndex = document.getElementById('chapter-select').value;
+
+    const selector = scope === 'global' ? baseSelector : getChapterSpecificSelector(baseSelector, chapterIndex);
+
     if (!parsedCSS[selector]) parsedCSS[selector] = {};
 
     // Helper to extract value and save/delete from state
@@ -149,6 +180,7 @@ function applyVisualEditorState() {
 
 function applyQuickCenter() {
     const mainClass = document.getElementById('class-input').value.trim() || 'book-content';
+    const scope = document.querySelector('input[name="centering-scope"]:checked').value;
     let cssRules = [];
 
     // Check each checkbox and generate CSS rules
@@ -165,14 +197,46 @@ function applyQuickCenter() {
         cssRules.push(`${mainClass} blockquote { text-align: center; }`);
     }
 
-    // Add new rules to existing CSS
-    const currentCSS = document.getElementById('css-editor').value;
-    const newCSS = currentCSS + '\n\n/* Quick Centering Rules */\n' + cssRules.join('\n');
+    const rulesText = cssRules.join('\n');
 
-    document.getElementById('css-editor').value = newCSS;
+    if (scope === 'global') {
+        // Add new rules to existing CSS (global)
+        const currentCSS = document.getElementById('css-editor').value;
+        const newCSS = currentCSS + '\n\n/* Quick Centering Rules */\n' + rulesText;
+        document.getElementById('css-editor').value = newCSS;
+        parseRawCSS();
+        updatePreview();
+        pushHistory(newCSS);
+    } else {
+        // Save to chapter-specific settings (stored in memory, not in CSS editor)
+        const chapterIndex = document.getElementById('chapter-select').value;
+        chapterCenteringSettings[chapterIndex] = {
+            headings: document.getElementById('center-headings').checked,
+            paragraphs: document.getElementById('center-paragraphs').checked,
+            images: document.getElementById('center-images').checked,
+            blockquotes: document.getElementById('center-blockquotes').checked
+        };
+        updatePreview();
+        pushHistory(document.getElementById('css-editor').value);
+    }
+}
+
+function deleteChapterCenteringCSS(chapterIndex) {
+    const settings = chapterCenteringSettings[chapterIndex];
+    if (!settings) return;
+
+    const mainClass = document.getElementById('class-input').value.trim() || 'book-content';
+    const cssEditor = document.getElementById('css-editor');
+    let currentCSS = cssEditor.value;
+
+    // Remove the chapter-specific centering block for this chapter
+    const chapterBlockRegex = new RegExp(
+        `\\n\\n/\\* Chapter ${chapterIndex} Centering \\*/\\n[\\s\\S]*?(?=\\n\\n/\\*|$)`,
+        'g'
+    );
+    currentCSS = currentCSS.replace(chapterBlockRegex, '');
+    cssEditor.value = currentCSS;
     parseRawCSS();
-    updatePreview();
-    pushHistory(newCSS);
 }
 
 function changeChapter() {
@@ -181,19 +245,46 @@ function changeChapter() {
 
     if (projectChapters[selectedIndex]) {
         window.sampleMd = projectChapters[selectedIndex].content;
+
+        // Load chapter-specific centering settings into checkboxes
+        const centeringSettings = chapterCenteringSettings[selectedIndex];
+        document.getElementById('center-headings').checked = centeringSettings?.headings || false;
+        document.getElementById('center-paragraphs').checked = centeringSettings?.paragraphs || false;
+        document.getElementById('center-images').checked = centeringSettings?.images || false;
+        document.getElementById('center-blockquotes').checked = centeringSettings?.blockquotes || false;
+
+        // Reload visual editor state for the new chapter
+        loadVisualEditorState();
         updatePreview();
     }
 }
 
 function updatePreview() {
-    const css = document.getElementById("css-editor").value;
+    const baseCSS = document.getElementById("css-editor").value;
     const mainClass = document.getElementById("class-input").value;
     const surface = document.getElementById("epub-render-surface");
+    const chapterIndex = document.getElementById("chapter-select").value;
+    const scope = document.querySelector('input[name="ve-scope"]:checked').value;
+
+    // Build combined CSS: base + chapter-specific centering
+    let combinedCSS = baseCSS;
+    const chapterSettings = chapterCenteringSettings[chapterIndex];
+    if (chapterSettings) {
+        const chapterCSS = generateChapterCenteringCSS(chapterSettings, mainClass);
+        if (chapterCSS) {
+            combinedCSS += '\n\n/* Chapter ' + chapterIndex + ' Centering */\n' + chapterCSS;
+        }
+    }
 
     const styleTag = document.getElementById("live-css");
-    if (styleTag) styleTag.innerHTML = css;
+    if (styleTag) styleTag.innerHTML = combinedCSS;
 
-    surface.className = mainClass;
+    // Set surface class with chapter-specific class when in chapter mode
+    if (scope === 'chapter') {
+        surface.className = `${mainClass} chapter-${chapterIndex}`;
+    } else {
+        surface.className = mainClass;
+    }
 
     if (window.sampleMd) {
         let md = window.sampleMd;
@@ -201,6 +292,23 @@ function updatePreview() {
         md = md.replace(/!\[(.*?)\]\(((?!http|data:).*?)\)/g, '![$1](/project-assets/$2)');
         surface.innerHTML = marked.parse(md);
     }
+}
+
+function generateChapterCenteringCSS(settings, mainClass) {
+    const rules = [];
+    if (settings.headings) {
+        rules.push(`${mainClass} h1, ${mainClass} h2, ${mainClass} h3 { text-align: center; }`);
+    }
+    if (settings.paragraphs) {
+        rules.push(`${mainClass} p { text-align: center; }`);
+    }
+    if (settings.images) {
+        rules.push(`${mainClass} img { display: block; margin: 0 auto; }`);
+    }
+    if (settings.blockquotes) {
+        rules.push(`${mainClass} blockquote { text-align: center; }`);
+    }
+    return rules.join('\n');
 }
 
 async function compile() {

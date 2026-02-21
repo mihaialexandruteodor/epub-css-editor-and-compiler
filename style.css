@@ -78,6 +78,7 @@ textarea {
   line-height: 1.6;
   outline: none;
   resize: none;
+  height: calc(100vh - 200px); /* Adjusts height to fill available space */
 }
 
 button {

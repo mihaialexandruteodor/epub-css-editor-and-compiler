@@ -70,7 +70,16 @@
         </div>
 
         <div id="visual-tab" class="tab-content active">
-          <div class="visual-controls">
+<div class="visual-controls">
+            <label style="flex-direction: row; align-items: center; gap: 8px; margin-bottom: 12px;">
+              <input type="radio" id="ve-scope-global" name="ve-scope" value="global" checked>
+              <span>Global</span>
+            </label>
+            <label style="flex-direction: row; align-items: center; gap: 8px;">
+              <input type="radio" id="ve-scope-chapter" name="ve-scope" value="chapter">
+              <span>Current Chapter</span>
+            </label>
+            <strong style="display: block; margin-bottom: 12px; color: var(--text-muted);">(Applies to all controls below)</strong>
             <label class="full-width">
               <strong>Target Markdown Element:</strong>
               <select id="ve-selector" onchange="loadVisualEditorState()">
@@ -162,7 +171,15 @@
             </label>
 
             <div style="margin-top: 12px; padding-top: 16px; border-top: 1px solid var(--border);">
-              <strong style="display: block; margin-bottom: 12px; color: var(--text-muted);">Quick Center Elements</strong>
+<label style="flex-direction: row; align-items: center; gap: 8px; margin-bottom: 12px;">
+  <input type="radio" id="centering-scope-global" name="centering-scope" value="global" checked>
+  <span>Global</span>
+</label>
+<label style="flex-direction: row; align-items: center; gap: 8px;">
+  <input type="radio" id="centering-scope-chapter" name="centering-scope" value="chapter">
+  <span>Current Chapter</span>
+</label>
+<strong style="display: block; margin-bottom: 12px; color: var(--text-muted);">Quick Center Elements</strong>
               
               <label style="flex-direction: row; align-items: center; gap: 8px;">
                 <input type="checkbox" id="center-headings" style="width: auto; flex-grow: 0;">
