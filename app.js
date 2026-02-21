@@ -147,6 +147,34 @@ function applyVisualEditorState() {
     pushHistory(document.getElementById("css-editor").value);
 }
 
+function applyQuickCenter() {
+    const mainClass = document.getElementById('class-input').value.trim() || 'book-content';
+    let cssRules = [];
+
+    // Check each checkbox and generate CSS rules
+    if (document.getElementById('center-headings').checked) {
+        cssRules.push(`${mainClass} h1, ${mainClass} h2, ${mainClass} h3 { text-align: center; }`);
+    }
+    if (document.getElementById('center-paragraphs').checked) {
+        cssRules.push(`${mainClass} p { text-align: center; }`);
+    }
+    if (document.getElementById('center-images').checked) {
+        cssRules.push(`${mainClass} img { display: block; margin: 0 auto; }`);
+    }
+    if (document.getElementById('center-blockquotes').checked) {
+        cssRules.push(`${mainClass} blockquote { text-align: center; }`);
+    }
+
+    // Add new rules to existing CSS
+    const currentCSS = document.getElementById('css-editor').value;
+    const newCSS = currentCSS + '\n\n/* Quick Centering Rules */\n' + cssRules.join('\n');
+
+    document.getElementById('css-editor').value = newCSS;
+    parseRawCSS();
+    updatePreview();
+    pushHistory(newCSS);
+}
+
 function changeChapter() {
     const select = document.getElementById("chapter-select");
     const selectedIndex = select.value;

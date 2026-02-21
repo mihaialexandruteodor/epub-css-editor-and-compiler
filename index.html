@@ -160,6 +160,34 @@
                 <option value="justify">Justify</option>
               </select>
             </label>
+
+            <div style="margin-top: 12px; padding-top: 16px; border-top: 1px solid var(--border);">
+              <strong style="display: block; margin-bottom: 12px; color: var(--text-muted);">Quick Center Elements</strong>
+              
+              <label style="flex-direction: row; align-items: center; gap: 8px;">
+                <input type="checkbox" id="center-headings" style="width: auto; flex-grow: 0;">
+                <span>Headings (h1-h3)</span>
+              </label>
+              
+              <label style="flex-direction: row; align-items: center; gap: 8px;">
+                <input type="checkbox" id="center-paragraphs" style="width: auto; flex-grow: 0;">
+                <span>Paragraphs</span>
+              </label>
+              
+              <label style="flex-direction: row; align-items: center; gap: 8px;">
+                <input type="checkbox" id="center-images" style="width: auto; flex-grow: 0;">
+                <span>Images</span>
+              </label>
+              
+              <label style="flex-direction: row; align-items: center; gap: 8px;">
+                <input type="checkbox" id="center-blockquotes" style="width: auto; flex-grow: 0;">
+                <span>Blockquotes</span>
+              </label>
+              
+              <button onclick="applyQuickCenter()" style="margin-top: 12px; width: 100%;">
+                Apply Centering
+              </button>
+            </div>
           </div>
         </div>
 

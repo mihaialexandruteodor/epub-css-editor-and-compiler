@@ -241,3 +241,32 @@ input:focus, select:focus {
   background: #059669;
   box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
 }
+
+/* --- NEW: Quick Center Section --- */
+.quick-center-section {
+  margin-top: 12px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.quick-center-section strong {
+  display: block;
+  margin-bottom: 12px;
+  color: var(--text-muted);
+}
+
+.quick-center-checkbox {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+
+.quick-center-checkbox input[type="checkbox"] {
+  width: auto;
+  flex-grow: 0;
+}
+
+.quick-center-btn {
+  margin-top: 12px;
+  width: 100%;
+}
