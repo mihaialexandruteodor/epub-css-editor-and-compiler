@@ -221,11 +221,18 @@ app.post('/compile', (req, res) => {
     const bookName = path.basename(currentProjectPath);
     const downloadPath = path.join(homeDir, 'Downloads', `${bookName}.epub`);
 
-    // 1. Get all Markdown files
+    // 1. Get all Markdown files and wrap them with chapter classes
     const chaptersDir = path.join(currentProjectPath, 'Chapters');
     const chapterFiles = fs.readdirSync(chaptersDir)
         .filter(f => f.endsWith('.md'))
-        .map(f => `"${path.join(chaptersDir, f)}"`)
+        .map((f, index) => {
+            const content = fs.readFileSync(path.join(chaptersDir, f), 'utf8');
+            const chapterClass = `chapter-${index}`;
+            const wrappedContent = `<div class="book-content ${chapterClass}">${content}</div>`;
+            const tempFilePath = path.join(chaptersDir, `temp_${f}`);
+            fs.writeFileSync(tempFilePath, wrappedContent);
+            return `"${tempFilePath}"`;
+        })
         .join(' ');
 
     // 2. Define absolute paths
@@ -260,6 +267,11 @@ app.post('/compile', (req, res) => {
             });
         }
         res.json({ message: `Success! Compiled to: ${downloadPath}` });
+
+        // Clean up temporary files
+        fs.readdirSync(chaptersDir)
+            .filter(f => f.startsWith('temp_'))
+            .forEach(f => fs.unlinkSync(path.join(chaptersDir, f)));
     });
 });
 

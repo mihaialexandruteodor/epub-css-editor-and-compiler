@@ -290,6 +290,13 @@ function updatePreview() {
         let md = window.sampleMd;
         md = md.replace(/!\[\[(.*?)\]\]/g, '![obsidian-image](/project-assets/images/$1)');
         md = md.replace(/!\[(.*?)\]\(((?!http|data:).*?)\)/g, '![$1](/project-assets/$2)');
+        // Wrap markdown content with chapter-specific class when in chapter mode
+        const chapterIndex = document.getElementById("chapter-select").value;
+        const scope = document.querySelector('input[name="ve-scope"]:checked').value;
+        const mainClass = document.getElementById("class-input").value;
+        if (scope === 'chapter') {
+            md = `<div class="${mainClass} chapter-${chapterIndex}">${md}</div>`;
+        }
         surface.innerHTML = marked.parse(md);
     }
 }
@@ -325,13 +332,13 @@ async function compile() {
 
         // 2. Strip the namespace so Pandoc can apply styles to standard HTML tags
         if (mainClass) {
-            // Converts ".book-content em {" to "em {"
-            const childrenRegex = new RegExp(`\\.${mainClass}\\s+`, 'g');
-            // Converts ".book-content {" to "body {"
-            const rootRegex = new RegExp(`\\.${mainClass}\\s*\\{`, 'g');
-
-            pandocCSS = pandocCSS.replace(childrenRegex, '');
-            pandocCSS = pandocCSS.replace(rootRegex, 'body {');
+            const mainClassDot = '.' + mainClass;
+            // Replace .book-content{ with body{
+            pandocCSS = pandocCSS.replace(new RegExp(mainClassDot + '\\s*\\{', 'g'), 'body {');
+            // Replace .book-content . (space) with empty
+            pandocCSS = pandocCSS.replace(new RegExp(mainClassDot + '\\s+', 'g'), '');
+            // Replace .book-content. (dot) with . (preserve the dot for next class)
+            pandocCSS = pandocCSS.replace(new RegExp(mainClassDot + '\\.', 'g'), '.');
         }
 
         // 3. Temporarily save the CLEANED CSS to disk for Pandoc to use
